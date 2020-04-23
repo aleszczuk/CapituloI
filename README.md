@@ -1,2 +1,2 @@
 # CapituloI
-Repositorio para guardar todos los scripts de la tesis doctoral, que corresponden al primer capitulo de la misma
+Repositorio para guardar todos los scripts de la tesis doctoral, que corresponden al primer capitulo de la misma Aca queremos aprender como crear y modificar archivos en GitHub con R y Git rrr
