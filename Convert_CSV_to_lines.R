@@ -1,15 +1,9 @@
-library(sp)
-library(maptools)
-library(leaflet)
-library(raster)
-library(sf)
-library(units)
-library(smoothr)
 
 # Esta funcion convierte un una tabla de puntos en lineas para verlo como un shape
-
+# La funcion no admite datos NA y demas
 points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) {
   
+  #lirerias 
   library(sp)
   library(maptools)
   library(leaflet)
@@ -56,22 +50,3 @@ points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) 
   }
 }
 
-'
-data <- datos1[,c(39,40,41,42,28)]
-names(data)
-data <- sp::SpatialPoints(data, proj4string = CRS("+proj=longlat"))
-v_lines <- points_to_line(data = data,long = "lon_pos_red", lat =  "lat_pos_red",id_field =  "Ciclo.1" , sort_field = "shape_id" )
-class(v_lines)
-sf<- st_as_sf(v_lines)
-proj4string(v_lines) <- CRS("+proj=tmerc +lat_0=-90 +lon_0=-54 +k=1 +x_0=7500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-st_write(sf, "shapefile_out.shp", driver="ESRI Shapefile")
-smooth(v_lines, method = "chaikin")
-ProyPosgar <- spTransform(v_lines,CRS("+proj=tmerc +lat_0=-90 +lon_0=-54 +k=1 +x_0=7500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
-v_lines <-sp::SpatialLinesDataFrame(v_lines)
-v_lines <- CRS("+proj=longlat +datum=WGS84")
-v_lines <- CRS("+proj=tmerc +lat_0=-90 +lon_0=-54 +k=1 +x_0=7500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-ProyPosgar <- spTransform(v_lines,CRS("+proj=tmerc +lat_0=-90 +lon_0=-54 +k=1 +x_0=7500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
-leaflet(data = v_lines) %>%
-  addTiles() %>%
-  addPolylines()
-'
