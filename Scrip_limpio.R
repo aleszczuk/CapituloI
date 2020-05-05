@@ -8,15 +8,20 @@ library(sf)
 library(units)
 library(smoothr)
 library(usedist)
-
 library(geosphere)
+library(dplyr)
 
+# defino el lugar de trabajo ----
 setwd("F:\\BACKUPPERSONAL\\LESZCZUK\\DiscoPosMorten\\Investigacion\\0-Propia\\TESIS_DOCTORAL\\3-Modelos\\Analsis_Datos_FW\\DatosSelvaSRL\\ProcesamientoVIdeo\\Procesados")
 
 # Datos ----
 datos <- read.csv("BBDD_all_ciclos.csv", sep = ";")
-datos$Fecha <- as.Date(datos$Fecha, format = "%d/%m/%y" ) # Especificacion que la fecha es fecha
+datos$Fecha <- as.Date(datos$Fecha, format = "%d/%m/%Y" ) # Especificacion que la fecha es tipo date
+datos$Fecha <- as.character(datos$Fecha)
+datos <- datos[order(datos$Fecha),]
+unique(datos$Fecha)
 
+# Creo una columna nueva y le asigno los valores de longitud y latitud en coordendas geograficas
 # pasar los datos a lat y long posgar
 for (i in 1:dim(datos)[1]){
   if (!is.null(datos[i,20])) {
@@ -30,7 +35,7 @@ for (i in 1:dim(datos)[1]){
   }
 }
 
-
+# relleno los datos vacios con valores fijos
 for (j in 1:dim(datos)[1]){
   if (!is.na(datos[j,34])){
     
@@ -47,15 +52,16 @@ for (j in 1:dim(datos)[1]){
 
 
 
-# Transformacion de los datos a datos espaciales
+# Transformation of spacial information
 # Creating a Data Frame to Spatial Objects
+# the data should dont have empty data because de funtion dont work well
 
 datos_sf <- st_as_sf(datos, coords = c("Lon_GEO_sh","Lat_GEO_sh"), crs = 4326)
 
 #plot(datos_sf$geometry)
 
 datos_sf <- st_transform(datos_sf, crs = 22177)
-
+datos_sf <- datos_sf[order(datos_sf$Fecha),]
 # Extraer las coordenadas transformadas
 extraccion <- data.frame()
 for (i in 1:length(datos_sf$geometry)){
@@ -78,29 +84,47 @@ for (k in 1:dim(datos_sf)[1] ){
 
 names(datos_sf)
 
-fecha <- unique(as.Date(datos$Fecha, origin = "1970-01-01" ))
+fecha <- unique(datos$Fecha)
 bloques <- unique(datos$bloque)
 
-x <- list()
-for (l in 1:length(fecha) ) {
-  x[[l]] <- data.frame(datos_sf[datos_sf$Fecha == fecha[l],35],
-                       datos_sf[datos_sf$Fecha == fecha[l],36],
-                       datos_sf[datos_sf$Fecha == fecha[l],31],
-                       datos_sf[datos_sf$Fecha == fecha[l],3])
+dato <- group_by(datos, Fecha, bloque) %>% summarise(n = n())
+dato <- as.data.frame(dato)
+
+
+x <- split(datos, datos$Fecha)
+x2 <- list()
+for (p in 1:6){ 
+  x2[[p]] <- split(x[[p]], x[[p]]$bloque )
+  }
+
+
   
-  x[[l]][,c(2,4,6,8)] <- NULL
-}
+# Funcion para separar objetos 
+lapply(seq_along(x), 
+       function(i,x) {assign(paste0("a",i),x[[i]], envir=.GlobalEnv)},
+       x=x)
 
-names(x) <- c("Lon_Posgar", "Lat_Posgar", "Ciclo" ,"Id")
+# for (l in 1:length(fecha) ) {
+#   for (m in 1:length(bloques) ) {
+#     
+#     x[[l]] <- data.frame(datos_sf[datos_sf$Fecha == fecha[l],35],
+#                        datos_sf[datos_sf$Fecha == fecha[l],36],
+#                        datos_sf[datos_sf$Fecha == fecha[l],31],
+#                        datos_sf[datos_sf$Fecha == fecha[l],3])
+#   
+#     x[[l]][,c(2,4,6,8)] <- NULL
+#   }
+# }
+# names(x) <- c("Lon_Posgar", "Lat_Posgar", "Ciclo" ,"Id")
 
 
-# Necesito armar una base de datos con los datos que pide la Funcion
-data <- as.data.frame(x[[1]])
-
-#data <- as.data.frame(datos_sf[,c(35:36,31,3)])
-
-
-data <- DF6[complete.cases(DF6$Lon_Posgar),]
+# # Necesito armar una base de datos con los datos que pide la Funcion
+# data <- as.data.frame(x[[1]])
+# 
+# #data <- as.data.frame(datos_sf[,c(35:36,31,3)])
+# 
+# 
+# data <- DF6[complete.cases(DF6$Lon_Posgar),]
 
 names(data)
 # Pasar de puntos a lineas ----
@@ -177,3 +201,9 @@ ciclo1 <-ciclo1[ciclo1$Actividad_ajustada =="MOV",]
 suav1 <- lowess(x = ciclo1$lon_pos.1, y = ciclo1$lat_pos.1, f = 0.8)
 plot(suav1$x, suav1$y)
 plot(ciclo1$lon_pos_red, ciclo1$lat_pos.1)
+
+
+
+
+
+
