@@ -10,7 +10,7 @@ library(smoothr)
 library(usedist)
 library(geosphere)
 library(dplyr)
-
+library(rlist)
 # defino el lugar de trabajo ----
 setwd("F:\\BACKUPPERSONAL\\LESZCZUK\\DiscoPosMorten\\Investigacion\\0-Propia\\TESIS_DOCTORAL\\3-Modelos\\Analsis_Datos_FW\\DatosSelvaSRL\\ProcesamientoVIdeo\\Procesados")
 
@@ -90,19 +90,39 @@ bloques <- unique(datos$bloque)
 dato <- group_by(datos, Fecha, bloque) %>% summarise(n = n())
 dato <- as.data.frame(dato)
 
-
-x <- split(datos, datos$Fecha)
+# El data sf data frame lo divido en varios mediante la fecha
+x <- split(datos_sf, datos_sf$Fecha)
+# Creo un list vacio
 x2 <- list()
+# Bucle para dividir el list en otro list con los bloques
+length(fecha)
 for (p in 1:6){ 
   x2[[p]] <- split(x[[p]], x[[p]]$bloque )
   }
 
 
-  
+#str(list.filter(x2, str(x2[[1]][5]) > 0 )  )
+#Bucle para extraer la informacion del list en diferentes data frames
+jk <- 0
+x3 <- list()
+x4 <- list()
+for (q in 1:6){
+  for (r in bloques) {
+    if (dim(x2[[q]][[r]])[1] > 0) {
+      jk <- jk+1
+      assign(paste0("DF_",r,jk),x2[[q]][[r]][,c(3,31,35,36)], envir=.GlobalEnv)
+      x3[[jk]] <- x2[[q]][[r]]
+      x4[[jk]] <- x3[[jk]][complete.cases(x3[[jk]]$Lon_Posgar),]
+
+    }
+  }
+}
+
+
 # Funcion para separar objetos 
-lapply(seq_along(x), 
-       function(i,x) {assign(paste0("a",i),x[[i]], envir=.GlobalEnv)},
-       x=x)
+# lapply(seq_along(x), 
+#        function(i,x) {assign(paste0("a",i),x[[i]], envir=.GlobalEnv)},
+#        x=x)
 
 # for (l in 1:length(fecha) ) {
 #   for (m in 1:length(bloques) ) {
@@ -125,6 +145,20 @@ lapply(seq_along(x),
 # 
 # 
 # data <- DF6[complete.cases(DF6$Lon_Posgar),]
+# LIsta y loop para convertir todo a lineas 
+# RESULTADO FINAL
+x5 <- list()
+for (s in 1:9) {
+  data <- data.frame(x4[[s]][c(35:36,31,3)] )
+
+  v_lines <- points_to_line(data = data ,long = "Lon_Posgar", lat =  "Lat_Posgar",id_field =  "Ciclo.1" , sort_field = "ID_General" )
+  x5[[s]] <- v_lines
+}
+
+# Graficar los datos ----
+for (t in 1:9) {
+  plot(x5[[t]])
+}
 
 names(data)
 # Pasar de puntos a lineas ----
