@@ -147,17 +147,23 @@ for (q in 1:6){
 # data <- DF6[complete.cases(DF6$Lon_Posgar),]
 # LIsta y loop para convertir todo a lineas 
 # RESULTADO FINAL
+setwd("F:\\BACKUPPERSONAL\\LESZCZUK\\DiscoPosMorten\\Investigacion\\0-Propia\\TESIS_DOCTORAL\\6-RepositorioGitHub\\CapituloI")
 x5 <- list()
 for (s in 1:9) {
   data <- data.frame(x4[[s]][c(35:36,31,3)] )
 
   v_lines <- points_to_line(data = data ,long = "Lon_Posgar", lat =  "Lat_Posgar",id_field =  "Ciclo.1" , sort_field = "ID_General" )
   x5[[s]] <- v_lines
+  sf<- st_as_sf(x5[[s]])
+  name <- paste0("point_to_line",s,".shp")
+  st_write(sf, name, driver="ESRI Shapefile")
+  
 }
 
 # Graficar los datos ----
 for (t in 1:9) {
   plot(x5[[t]])
+  
 }
 
 names(data)
